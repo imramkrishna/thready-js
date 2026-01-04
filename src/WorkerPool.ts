@@ -50,21 +50,21 @@ export class WorkerPool {
   // The maximum number of concurrent workers allowed.
   private maxWorkers: number;
 
-  // The path to the worker script or a factory function that returns a Worker.
-  private workerScript: string | (() => Worker);
+  // User-provided worker implementation (path or factory function).
+  private workerFactory: string | (() => Worker);
 
   /**
    * Constructor for the WorkerPool.
    * 
-   * @param config - Configuration object containing settings like maxWorkers and script path.
+   * @param config - Configuration object with user's worker implementation.
    */
   constructor(config: WorkerPoolConfig) {
     // Determine the maximum number of workers.
     // Priority: Config value -> Hardware concurrency (CPU cores) -> Default to 4.
     this.maxWorkers = config.maxWorkers || navigator.hardwareConcurrency || 4;
 
-    // Store the worker script source (path or factory function).
-    this.workerScript = config.workerScript;
+    // Store the user's worker implementation (path or factory function).
+    this.workerFactory = config.worker;
 
     // Initialize the pool by creating the workers.
     this.initialize();
@@ -88,14 +88,14 @@ export class WorkerPool {
   private createWorker(): Worker {
     let worker: Worker;
 
-    // Check if the script source is a factory function.
-    if (typeof this.workerScript === 'function') {
+    // Check if the user provided a factory function.
+    if (typeof this.workerFactory === 'function') {
       // If it's a function, call it to get the Worker instance.
       // This is useful for environments like Vite or Webpack with specific worker loaders.
-      worker = this.workerScript();
+      worker = this.workerFactory();
     } else {
       // If it's a string, treat it as a file path and instantiate a standard Worker.
-      worker = new Worker(this.workerScript);
+      worker = new Worker(this.workerFactory);
     }
 
     // Set up the 'onmessage' event handler to receive results from the worker.

@@ -1,7 +1,7 @@
 {
   "name": "thready",
   "version": "1.0.0",
-  "description": "A lightweight, type-safe thread pool implementation for JavaScript and TypeScript using Web Workers",
+  "description": "A lightweight, type-safe thread pool manager for JavaScript and TypeScript. Bring your own worker - we handle the pooling.",
   "keywords": [
     "worker",
     "threads",

@@ -9,10 +9,14 @@ import { WorkerPool } from './WorkerPool.js';
  * This provides a simplified, global access point for the application to
  * interact with the worker threads without managing instance references manually.
  * 
+ * IMPORTANT: You must provide your own worker script implementation.
+ * Thready does not include any built-in worker logic.
+ * 
  * Usage:
- * 1. Initialize once at app startup: `threadPool.init({...})`
- * 2. Execute tasks anywhere: `await threadPool.execute(...)`
- * 3. Cleanup on app shutdown: `threadPool.shutdown()`
+ * 1. Create your own worker script that handles your tasks
+ * 2. Initialize once at app startup: `threadPool.init({ worker: './your-worker.js' })`
+ * 3. Execute tasks anywhere: `await threadPool.execute(...)`
+ * 4. Cleanup on app shutdown: `threadPool.shutdown()`
  */
 class ThreadPool {
   // Internal reference to the actual WorkerPool instance.
@@ -23,10 +27,10 @@ class ThreadPool {
   private initialized = false;
 
   /**
-   * Initializes the thread pool.
+   * Initializes the thread pool with your worker implementation.
    * This must be called before executing any tasks.
    * 
-   * @param config - Configuration options (maxWorkers, workerScript path).
+   * @param config - Configuration with your worker implementation (path or factory function).
    */
   public init(config: WorkerPoolConfig): void {
     // Prevent multiple initializations, which could leak resources.

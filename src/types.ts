@@ -19,7 +19,28 @@ export interface Task<T = any> {
   transferables?: Transferable[] | undefined;
 }
 
+/**
+ * Configuration for the WorkerPool.
+ * 
+ * IMPORTANT: You must provide your own worker implementation.
+ * Thready does not include any built-in worker scripts.
+ */
 export interface WorkerPoolConfig {
+  /**
+   * Maximum number of worker threads to create.
+   * Defaults to navigator.hardwareConcurrency (CPU cores) or 4.
+   */
   maxWorkers?: number;
-  workerScript: string | (() => Worker);
+  
+  /**
+   * YOUR worker implementation - either:
+   * - A string path to your worker script file
+   * - A factory function that returns a Worker instance
+   * 
+   * Examples:
+   * - Path: './my-worker.js'
+   * - Vite: () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' })
+   * - Webpack: () => new Worker(new URL('./worker.js', import.meta.url))
+   */
+  worker: string | (() => Worker);
 }

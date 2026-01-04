@@ -1,5 +1,7 @@
 # 🚀 Quick Start Guide - Thready
 
+> **Important:** Thready only manages the worker pool. You must create your own worker script with your custom logic.
+
 ## Install
 
 ```bash
@@ -8,7 +10,9 @@ npm install thready
 
 ## 3-Step Setup
 
-### Step 1: Create Worker File
+### Step 1: Create Your Worker File
+
+**You must create your own worker script.** Here's an example:
 
 Create `worker.js` in your project:
 
@@ -42,7 +46,7 @@ import { threadPool } from 'thready';
 
 threadPool.init({
   maxWorkers: 4,
-  workerScript: './worker.js'
+  worker: './worker.js' // Path to YOUR worker script
 });
 ```
 
@@ -76,7 +80,7 @@ import { useEffect } from 'react';
 
 function App() {
   useEffect(() => {
-    threadPool.init({ maxWorkers: 4, workerScript: '/worker.js' });
+    threadPool.init({ maxWorkers: 4, worker: '/worker.js' });
     return () => threadPool.shutdown();
   }, []);
   
@@ -93,7 +97,7 @@ function App() {
 
 ```javascript
 threadPool.init({
-  workerScript: () => new Worker(
+  worker: () => new Worker(
     new URL('./worker.js', import.meta.url),
     { type: 'module' }
   )
@@ -103,8 +107,8 @@ threadPool.init({
 ## API
 
 ```javascript
-// Initialize
-threadPool.init({ maxWorkers: 4, workerScript: './worker.js' });
+// Initialize with your worker
+threadPool.init({ maxWorkers: 4, worker: './your-worker.js' });
 
 // Execute task
 await threadPool.execute(taskType, payload, transferables?);

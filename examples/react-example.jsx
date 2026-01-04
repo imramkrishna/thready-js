@@ -11,10 +11,10 @@ function ThreadyExample() {
   const [input, setInput] = useState(35);
 
   useEffect(() => {
-    // Initialize thread pool on component mount
+    // Initialize thread pool on component mount with YOUR worker
     threadPool.init({
       maxWorkers: 4,
-      workerScript: '/worker.js', // Place worker.js in your public folder
+      worker: '/worker.js', // Place YOUR worker.js in public folder
     });
 
     // Cleanup on component unmount

@@ -2,6 +2,8 @@
 
 A lightweight, type-safe thread pool implementation for JavaScript and TypeScript that enables true multithreading using Web Workers.
 
+> **Note:** Thready is a worker pool manager only. You provide your own worker script with your custom logic.
+
 [![npm version](https://img.shields.io/npm/v/thready.svg)](https://www.npmjs.com/package/thready)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
@@ -14,6 +16,7 @@ A lightweight, type-safe thread pool implementation for JavaScript and TypeScrip
 - ⚡ **Performance** - Supports transferable objects for zero-copy data transfer
 - 🎯 **Smart Queue Management** - Automatically manages task queuing and load balancing
 - 🔍 **Statistics** - Built-in monitoring of pool state and performance
+- 🎨 **Bring Your Own Worker** - You write the worker logic, we handle the pooling
 
 ## Installation
 
@@ -29,9 +32,11 @@ yarn add thready
 
 ## Quick Start
 
-### 1. Create a Worker Script
+### 1. Create Your Worker Script
 
-First, create a worker script that handles your tasks:
+**Important:** You must create your own worker script. Thready doesn't include any built-in worker logic - it only manages the worker pool.
+
+Create a worker script that handles your specific tasks:
 
 ```javascript
 // worker.js
@@ -74,10 +79,10 @@ function processData(data) {
 ```javascript
 import { threadPool } from 'thready';
 
-// Initialize the pool once at app startup
+// Initialize the pool once at app startup with YOUR worker script
 threadPool.init({
   maxWorkers: 4, // Optional: defaults to CPU cores
-  workerScript: './worker.js' // Path to your worker script
+  worker: './worker.js' // Path to YOUR worker script
 });
 
 // Execute tasks anywhere in your application
@@ -108,12 +113,12 @@ import { threadPool } from 'thready';
 
 // Vite
 threadPool.init({
-  workerScript: () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' })
+  worker: () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' })
 });
 
 // Webpack 5
 threadPool.init({
-  workerScript: () => new Worker(new URL('./worker.js', import.meta.url))
+  worker: () => new Worker(new URL('./worker.js', import.meta.url))
 });
 ```
 
@@ -145,7 +150,7 @@ import { WorkerPool } from 'thready';
 
 const pool = new WorkerPool({
   maxWorkers: 8,
-  workerScript: './worker.js'
+  worker: './worker.js' // Your worker implementation
 });
 
 const result = await pool.run('taskType', payload);
@@ -192,10 +197,10 @@ function App() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Initialize on mount
+    // Initialize on mount with your worker
     threadPool.init({
       maxWorkers: 4,
-      workerScript: '/worker.js'
+      worker: '/worker.js' // Your worker script in public folder
     });
 
     // Cleanup on unmount
@@ -258,10 +263,10 @@ The singleton instance for managing workers globally.
 
 - **`init(config: WorkerPoolConfig): void`**
   
-  Initializes the thread pool. Must be called before executing tasks.
+  Initializes the thread pool with your worker implementation. Must be called before executing tasks.
   
   - `config.maxWorkers` (optional): Maximum number of workers (defaults to CPU cores)
-  - `config.workerScript`: Path to worker script or factory function
+  - `config.worker`: Path to YOUR worker script or factory function that returns a Worker
 
 - **`execute<T>(taskType: string, payload: any, transferables?: Transferable[]): Promise<T>`**
   
@@ -321,12 +326,13 @@ const result = await threadPool.execute<CalculationResult>('calculate', { n: 100
 
 ## Best Practices
 
-1. **Initialize Once**: Call `threadPool.init()` only once at application startup
-2. **Worker Script**: Keep worker scripts framework-agnostic and focused
-3. **Cleanup**: Always call `shutdown()` when your application closes
-4. **Transferables**: Use transferables for large data (ArrayBuffers, ImageData) to avoid copying
-5. **Error Handling**: Always wrap `execute()` calls in try-catch blocks
-6. **Task Granularity**: Break large tasks into smaller chunks for better load balancing
+1. **Write Your Own Worker**: Create a worker script tailored to your specific needs
+2. **Initialize Once**: Call `threadPool.init()` only once at application startup
+3. **Keep Workers Pure**: Worker scripts should be framework-agnostic and focused
+4. **Cleanup**: Always call `shutdown()` when your application closes
+5. **Transferables**: Use transferables for large data (ArrayBuffers, ImageData) to avoid copying
+6. **Error Handling**: Always wrap `execute()` calls in try-catch blocks
+7. **Task Granularity**: Break large tasks into smaller chunks for better load balancing
 
 ## Performance Tips
 

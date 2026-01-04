@@ -3,10 +3,10 @@
 
 import { threadPool } from 'thready';
 
-// Initialize with Vite's worker syntax
+// Initialize with Vite's worker syntax and YOUR worker
 threadPool.init({
   maxWorkers: 4,
-  workerScript: () =>
+  worker: () =>
     new Worker(new URL('./worker.js', import.meta.url), {
       type: 'module',
     }),

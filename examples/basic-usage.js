@@ -3,10 +3,10 @@
 
 import { threadPool } from 'thready';
 
-// Initialize the thread pool
+// Initialize the thread pool with your worker
 threadPool.init({
   maxWorkers: 4,
-  workerScript: './examples/worker.js',
+  worker: './examples/worker.js',
 });
 
 async function runExamples() {
