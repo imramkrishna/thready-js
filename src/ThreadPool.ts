@@ -2,231 +2,93 @@ import type { WorkerMessage, WorkerResponse, Task, WorkerPoolConfig } from './ty
 import { WorkerPool } from './WorkerPool.js';
 
 
+/**
+ * ThreadPool Class
+ * 
+ * Acts as a Singleton wrapper around the WorkerPool.
+ * This provides a simplified, global access point for the application to
+ * interact with the worker threads without managing instance references manually.
+ * 
+ * Usage:
+ * 1. Initialize once at app startup: `threadPool.init({...})`
+ * 2. Execute tasks anywhere: `await threadPool.execute(...)`
+ * 3. Cleanup on app shutdown: `threadPool.shutdown()`
+ */
 class ThreadPool {
+  // Internal reference to the actual WorkerPool instance.
+  // It is null until init() is called.
   private pool: WorkerPool | null = null;
+
+  // Flag to track initialization status and prevent double-init.
   private initialized = false;
 
+  /**
+   * Initializes the thread pool.
+   * This must be called before executing any tasks.
+   * 
+   * @param config - Configuration options (maxWorkers, workerScript path).
+   */
   public init(config: WorkerPoolConfig): void {
+    // Prevent multiple initializations, which could leak resources.
     if (this.initialized) {
       console.warn('ThreadPool already initialized');
       return;
     }
 
+    // Create the WorkerPool instance.
     this.pool = new WorkerPool(config);
     this.initialized = true;
   }
 
+  /**
+   * Executes a task on the thread pool.
+   * This is a proxy method that forwards the request to the underlying WorkerPool.
+   * 
+   * @template T - The expected return type of the task.
+   * @param taskType - Identify the operation to run in the worker.
+   * @param payload - Data to be processed.
+   * @param transferables - Optional array of buffers to transfer ownership.
+   * @returns Promise resolving to the result.
+   * @throws Error if the pool hasn't been initialized.
+   */
   public async execute<T = any>(
     taskType: string,
     payload: any,
     transferables?: Transferable[]
   ): Promise<T> {
+    // Safety check ensuring init() was called.
     if (!this.pool) {
       throw new Error('ThreadPool not initialized. Call init() first.');
     }
 
+    // Delegate execution to the WorkerPool instance.
     return this.pool.run<T>(taskType, payload, transferables);
   }
 
+  /**
+   * Retrieves statistics from the underlying pool.
+   * Returns null if pool is not initialized.
+   */
   public getStats() {
     return this.pool?.getStats() || null;
   }
 
+  /**
+   * Shuts down the thread pool and releases all resources.
+   * Should be called when the application is closing or unmounting.
+   */
   public shutdown(): void {
     if (this.pool) {
+      // Terminate all workers.
       this.pool.terminate();
+
+      // Clear references to allow garbage collection.
       this.pool = null;
       this.initialized = false;
     }
   }
 }
 
-// Export singleton instance
+// Export a single instance of the ThreadPool class.
+// This enforces the Singleton pattern across the application.
 export const threadPool = new ThreadPool();
-
-// ============================================================================
-// USAGE EXAMPLES FOR DIFFERENT FRAMEWORKS
-// ============================================================================
-
-// EXAMPLE 1: Vanilla JavaScript
-/*
-import { threadPool } from './threadPool';
-
-// Initialize with worker script path
-threadPool.init({
-  maxWorkers: 4,
-  workerScript: './worker.js'
-});
-
-// Execute tasks
-async function heavyCalculation() {
-  const result = await threadPool.execute('fibonacci', 40);
-  console.log('Fibonacci result:', result);
-}
-
-// With transferables (zero-copy)
-async function processImageData(imageData) {
-  const pixels = imageData.data;
-  const result = await threadPool.execute(
-    'processImage',
-    pixels,
-    [pixels.buffer] // Transfer ownership
-  );
-  console.log('Processed pixels:', result);
-}
-*/
-
-// EXAMPLE 2: React
-/*
-import { threadPool } from './threadPool';
-import { useEffect, useState } from 'react';
-
-function App() {
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    // Initialize on mount
-    threadPool.init({
-      maxWorkers: 4,
-      workerScript: '/worker.js'
-    });
-
-    // Cleanup on unmount
-    return () => threadPool.shutdown();
-  }, []);
-
-  const handleHeavyTask = async () => {
-    setLoading(true);
-    try {
-      const data = await threadPool.execute('processLargeArray',
-        Array.from({ length: 1000000 }, (_, i) => i)
-      );
-      setResult(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div>
-      <button onClick={handleHeavyTask} disabled={loading}>
-        Run Heavy Task
-      </button>
-      {loading && <p>Processing...</p>}
-      {result && <p>Result length: {result.length}</p>}
-    </div>
-  );
-}
-*/
-
-// EXAMPLE 3: Vue 3
-/*
-import { threadPool } from './threadPool';
-import { ref, onMounted, onUnmounted } from 'vue';
-
-export default {
-  setup() {
-    const result = ref(null);
-    const loading = ref(false);
-
-    onMounted(() => {
-      threadPool.init({
-        maxWorkers: 4,
-        workerScript: '/worker.js'
-      });
-    });
-
-    onUnmounted(() => {
-      threadPool.shutdown();
-    });
-
-    const runTask = async () => {
-      loading.value = true;
-      try {
-        result.value = await threadPool.execute('fibonacci', 35);
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    return { result, loading, runTask };
-  }
-};
-*/
-
-// EXAMPLE 4: Angular
-/*
-import { threadPool } from './threadPool';
-import { Component, OnInit, OnDestroy } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  template: `
-    <button (click)="runTask()" [disabled]="loading">Run Task</button>
-    <p *ngIf="loading">Processing...</p>
-    <p *ngIf="result">Result: {{ result }}</p>
-  `
-})
-export class AppComponent implements OnInit, OnDestroy {
-  result: any = null;
-  loading = false;
-
-  ngOnInit() {
-    threadPool.init({
-      maxWorkers: 4,
-      workerScript: './worker.js'
-    });
-  }
-
-  ngOnDestroy() {
-    threadPool.shutdown();
-  }
-
-  async runTask() {
-    this.loading = true;
-    try {
-      this.result = await threadPool.execute('fibonacci', 35);
-    } finally {
-      this.loading = false;
-    }
-  }
-}
-*/
-
-// EXAMPLE 5: Svelte
-/*
-<script>
-  import { threadPool } from './threadPool';
-  import { onMount, onDestroy } from 'svelte';
-  
-  let result = null;
-  let loading = false;
-
-  onMount(() => {
-    threadPool.init({
-      maxWorkers: 4,
-      workerScript: '/worker.js'
-    });
-  });
-
-  onDestroy(() => {
-    threadPool.shutdown();
-  });
-
-  async function runTask() {
-    loading = true;
-    try {
-      result = await threadPool.execute('fibonacci', 35);
-    } finally {
-      loading = false;
-    }
-  }
-</script>
-
-<button on:click={runTask} disabled={loading}>Run Task</button>
-{#if loading}<p>Processing...</p>{/if}
-{#if result}<p>Result: {result}</p>{/if}
-*/

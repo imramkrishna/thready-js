@@ -16,7 +16,7 @@ export interface Task<T = any> {
   payload: any;
   resolve: (value: T) => void;
   reject: (error: Error) => void;
-  transferables?: Transferable[];
+  transferables?: Transferable[] | undefined;
 }
 
 export interface WorkerPoolConfig {
