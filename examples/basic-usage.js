@@ -16,6 +16,10 @@ threadPool.init({
   worker: () => new Worker(join(__dirname, 'worker-node.mjs')),
 });
 
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
 async function runExamples() {
   console.log('🧵 Thready - Basic Usage Examples (Node.js)\n');
 
@@ -23,7 +27,7 @@ async function runExamples() {
     // Example 1: Calculate Fibonacci
     console.log('1. Calculating Fibonacci(5)...');
     const startFib = Date.now();
-    const fibResult = await threadPool.execute('fibonacci', 5);
+    const fibResult = await threadPool.execute("fibonacci", 30);
     console.log(`   Result: ${fibResult}`);
     console.log(`   Time: ${Date.now() - startFib}ms\n`);
 
