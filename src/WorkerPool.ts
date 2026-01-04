@@ -81,11 +81,11 @@ export class WorkerPool {
   }
 
   /**
-   * Creates a new Worker instance and sets up its event listeners.
-   * Supports both browser Web Workers and Node.js worker_threads.
-   * 
-   * @returns The created Worker instance.
-   */
+ * Creates a new Worker instance and sets up its event listeners.
+ * Supports both browser Web Workers and Node.js worker_threads.
+ * 
+ * @returns The created Worker instance.
+ */
   private createWorker(): Worker {
     let worker: Worker;
 
@@ -97,22 +97,21 @@ export class WorkerPool {
     } else {
       // If it's a string, treat it as a file path and instantiate a Worker.
       // Detect if we're in Node.js environment
-      const isNode = typeof window === 'undefined' && 
-                     typeof global !== 'undefined' && 
-                     typeof process !== 'undefined' && 
-                     process.versions?.node;
-      
+      const isNode = typeof window === 'undefined' &&
+        typeof (globalThis as any).process !== 'undefined' &&
+        (globalThis as any).process?.versions?.node;
+
       if (isNode) {
         // Node.js environment - use worker_threads
         try {
           // Use a dynamic require that works in both ESM and CJS
-          const workerThreads = (globalThis as any).__workerThreads || 
+          const workerThreads = (globalThis as any).__workerThreads ||
             (typeof require !== 'undefined' ? require('worker_threads') : null);
-          
+
           if (!workerThreads) {
             throw new Error('worker_threads module not found');
           }
-          
+
           const NodeWorker = workerThreads.Worker;
           worker = new NodeWorker(this.workerFactory) as any;
         } catch (error) {
@@ -128,16 +127,30 @@ export class WorkerPool {
       }
     }
 
-    // Set up the 'onmessage' event handler to receive results from the worker.
-    worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
-      this.handleWorkerMessage(worker, event.data);
-    };
+    // Set up event listeners (Handle both Node.js and Web Worker patterns)
+    // Node.js workers use .on(), Web Workers use .onmessage
+    if (typeof (worker as any).on === 'function') {
+      // Node.js Worker (EventEmitter style)
+      (worker as any).on('message', (data: any) => {
+        // Node.js workers send the data directly, not wrapped in an event object
+        this.handleWorkerMessage(worker, data as WorkerResponse);
+      });
 
-    // Set up the 'onerror' event handler to catch any unhandled errors in the worker.
-    worker.onerror = (error) => {
-      console.error('Worker error:', error);
-      this.handleWorkerError(worker, error);
-    };
+      (worker as any).on('error', (error: any) => {
+        console.error('Worker error:', error);
+        this.handleWorkerError(worker, error);
+      });
+    } else {
+      // Web Worker (Standard DOM style)
+      worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+        this.handleWorkerMessage(worker, event.data);
+      };
+
+      worker.onerror = (error) => {
+        console.error('Worker error:', error);
+        this.handleWorkerError(worker, error);
+      };
+    }
 
     // Add the new worker to the master list of workers.
     this.workers.push(worker);
