@@ -1,0 +1,35 @@
+{
+  "name": "thready",
+  "version": "1.0.0",
+  "description": "A npm package that allows multithreading in js and ts.",
+  "homepage": "https://github.com/imramkrishna/Thready#readme",
+  "bugs": {
+    "url": "https://github.com/imramkrishna/Thready/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imramkrishna/Thready.git"
+  },
+  "license": "ISC",
+  "author": "Ram Krishna Yadav",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}
