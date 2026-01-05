@@ -1,4 +1,4 @@
-import { writeFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 const browserWorkerTemplate = `// Thready Browser Worker

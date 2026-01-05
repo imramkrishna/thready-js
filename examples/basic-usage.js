@@ -12,48 +12,42 @@ const __dirname = dirname(__filename);
 // Initialize the thread pool with your Node.js worker
 // Note: For ESM Node.js, use a factory function
 threadPool.init({
-  maxWorkers: 4,
+  maxWorkers: 1,
   worker: () => new Worker(join(__dirname, 'worker-node.mjs')),
 });
 
-function fibonacci(n) {
-  if (n <= 1) return n;
-  return fibonacci(n - 1) + fibonacci(n - 2);
-}
 async function runExamples() {
   console.log('🧵 Thready - Basic Usage Examples (Node.js)\n');
 
   try {
-    // Example 1: Calculate Fibonacci
-    console.log('1. Calculating Fibonacci(5)...');
+    // Example 1: Calculate Factorial
+    console.log('1. Calculating Factorial(5)...');
     const startFib = Date.now();
-    const fibResult = await threadPool.execute("fibonacci", 30);
+    const fibResult = await threadPool.execute("factorial", 60);
     console.log(`   Result: ${fibResult}`);
     console.log(`   Time: ${Date.now() - startFib}ms\n`);
 
     // Example 2: Check if number is prime
     console.log('2. Checking if 104729 is prime...');
     const startPrime = Date.now();
-    const primeResult = await threadPool.execute('primeCheck', 104729);
+    const primeResult = await threadPool.execute('primeCheck', 10472912414343);
     console.log(`   Result: ${primeResult ? 'Prime' : 'Not Prime'}`);
     console.log(`   Time: ${Date.now() - startPrime}ms\n`);
 
     // Example 3: Process array
     console.log('3. Processing array of numbers...');
     const startArray = Date.now();
-    const arrayResult = await threadPool.execute('processArray', [1, 2, 3, 4, 5]);
+    const arrayResult = await threadPool.execute('processArray', [1, 2, 3, 4, 5,4,5,2,3,5,2,3,5,3,23,53,53,53,53,5,32,5,3]);
     console.log(`   Result: [${arrayResult}]`);
     console.log(`   Time: ${Date.now() - startArray}ms\n`);
 
     // Example 4: Parallel execution
-    console.log('4. Running 5 tasks in parallel...');
+    console.log('4. Running 3 tasks in parallel...');
     const startParallel = Date.now();
     const parallelTasks = [
-      threadPool.execute('fibonacci', 25),
-      threadPool.execute('factorial', 15),
+      threadPool.execute('factorial', 60),
       threadPool.execute('primeCheck', 104729),
-      threadPool.execute('heavyCalculation', 100000),
-      threadPool.execute('processArray', [10, 20, 30, 40, 50]),
+      threadPool.execute('processArray', [1, 2, 3, 4, 5,4,5,2,3,5,2,3,5,3,23,53,53,53,53,5,32,5,3]),
     ];
     const results = await Promise.all(parallelTasks);
     console.log(`   All tasks completed!`);

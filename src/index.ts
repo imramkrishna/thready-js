@@ -5,5 +5,5 @@ export type {
   WorkerMessage, 
   WorkerResponse, 
   Task, 
-  WorkerPoolConfig 
+  WorkerPoolConfig
 } from './types.js';

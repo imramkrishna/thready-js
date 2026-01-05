@@ -1,4 +1,4 @@
-import type { WorkerMessage, WorkerResponse, Task, WorkerPoolConfig } from './types.js';
+import type { WorkerPoolConfig } from './types.js';
 import { WorkerPool } from './WorkerPool.js';
 
 
