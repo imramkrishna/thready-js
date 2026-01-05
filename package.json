@@ -1,6 +1,6 @@
 {
   "name": "thready-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A lightweight, type-safe thread pool manager for JavaScript and TypeScript. Bring your own worker - we handle the pooling.",
   "keywords": [
     "worker",
