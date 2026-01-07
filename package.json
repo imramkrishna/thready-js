@@ -52,8 +52,5 @@
   },
   "bin": {
     "thready": "./dist/cli.js"
-  },
-  "dependencies": {
-    "thready-js": "^1.0.1"
   }
 }
